@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>抽獎系統</title>
+  <style>
+    body {
+      font-family: "微軟正黑體", sans-serif;
+      background-color: #f4f4f4;
+      text-align: center;
+      padding: 50px;
+      position: relative;
+    }
+    h1 {
+      color: #333;
+    }
+    select, button {
+      padding: 10px;
+      font-size: 16px;
+      margin: 10px;
+    }
+    #result {
+      margin-top: 30px;
+      font-size: 20px;
+      color: #c9302c;
+      font-weight: bold;
+    }
+    #log {
+      margin-top: 40px;
+      text-align: left;
+      max-width: 500px;
+      margin-left: auto;
+      margin-right: auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 5px;
+      box-shadow: 0 0 10px #ccc;
+    }
+    li {
+      margin-bottom: 5px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>護理站防災演練分配抽籤</h1>
+
+  <label for="person">請選擇抽籤人員：</label>
+  <select id="person">
+    <option value="">-- 選擇人員 --</option>
+    <option>婉玲</option>
+    <option>靜誼</option>
+    <option>千慧</option>
+    <option>有妏</option>
+    <option>瑋萱</option>
+    <option>明妘</option>
+    <option>淑娟</option>
+    <option>瓊慧</option>
+    <option>捷渝</option>
+    <option>曉蔓</option>
+  </select>
+  <br>
+  <button onclick="drawPrize()">抽籤！</button>
+  <button onclick="resetAll()">全部重設</button>
+
+  <div id="result"></div>
+
+  <div id="log">
+    <h3>抽籤結果紀錄</h3>
+    <ul id="history"></ul>
+  </div>
+
+  <!-- 引入煙火效果的函式庫 -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <script>
+    const allPrizes = [
+      "主講說明官",
+      "通報A",
+      "通報B",
+      "通報C",
+      "滅火A",
+      "滅火B",
+      "引導A",
+      "安全A",
+      "安全B",
+      "病人丙(輪椅)"
+    ];
+
+    const allPeople = [
+      "婉玲",
+      "靜誼",
+      "千慧",
+      "有妏",
+      "瑋萱",
+      "明妘",
+      "淑娟",
+      "瓊慧",
+      "捷渝",
+      "曉蔓"
+    ];
+
+    let drawnData = JSON.parse(localStorage.getItem("drawnData")) || {};
+
+    function updateHistoryUI() {
+      const history = document.getElementById("history");
+      history.innerHTML = "";
+      for (let person in drawnData) {
+        const li = document.createElement("li");
+        li.textContent = person + " → " + drawnData[person];
+        history.appendChild(li);
+      }
+    }
+
+    function getRemainingPrizes() {
+      const assigned = Object.values(drawnData);
+      return allPrizes.filter(prize => !assigned.includes(prize));
+    }
+
+    function drawPrize() {
+      const select = document.getElementById("person");
+      const person = select.value;
+
+      if (!person) {
+        alert("請選擇一位人員！");
+        return;
+      }
+
+      if (drawnData[person]) {
+        document.getElementById("result").textContent = person + " 已經抽過囉！";
+        return;
+      }
+
+      const remaining = getRemainingPrizes();
+      if (remaining.length === 0) {
+        document.getElementById("result").textContent = "所有獎項已抽完！";
+        return;
+      }
+
+      const randomIndex = Math.floor(Math.random() * remaining.length);
+      const prize = remaining[randomIndex];
+
+      drawnData[person] = prize;
+      localStorage.setItem("drawnData", JSON.stringify(drawnData));
+
+      document.getElementById("result").textContent = person + " 抽中了：「" + prize + "」";
+      updateHistoryUI();
+      fireConfetti(); // 放煙火
+    }
+
+    function fireConfetti() {
+      confetti({
+        particleCount: 120,
+        spread: 100,
+        origin: { y: 0.6 }
+      });
+    }
+
+    function resetAll() {
+      if (confirm("確定要全部重設抽籤資料？")) {
+        localStorage.removeItem("drawnData");
+        drawnData = {};
+        document.getElementById("result").textContent = "";
+        updateHistoryUI();
+      }
+    }
+
+    updateHistoryUI();
+  </script>
+
+</body>
+</html>
